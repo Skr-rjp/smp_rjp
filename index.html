@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Resmi TKA CBT - Tes Kemampuan Akademik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel Import/Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        govNavy: '#0d3b66',
+                        govDarkNavy: '#082542',
+                        govGold: '#e6a100',
+                        govGoldHover: '#c48900',
+                        govLightBg: '#f4f7fa',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fa; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #0d3b66; border-radius: 4px; }
+        .modal-backdrop { background-color: rgba(13, 59, 102, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Header Instansi Resmi -->
+    <header class="bg-govNavy text-white shadow-md border-b-4 border-govGold sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img id="appHeaderLogo" src="https://placehold.co/100x100/0d3b66/ffffff?text=TKA+RI" alt="Logo Instansi" class="h-12 w-12 object-contain bg-white rounded-full p-1 border border-govGold">
+                <div>
+                    <h1 id="appHeaderTitle" class="text-base sm:text-lg font-bold tracking-wide uppercase leading-tight">Sistem CBT Tes Kemampuan Akademik (TKA)</h1>
+                    <p id="appHeaderSubtitle" class="text-xs text-amber-300 font-medium tracking-normal">Portal Evaluasi Nasional Pemetaan Mutu Pendidikan</p>
+                </div>
+            </div>
+            
+            <div id="userHeaderBadge" class="hidden flex items-center space-x-3">
+                <div class="text-right hidden sm:block">
+                    <div id="badgeUserName" class="text-sm font-semibold">User</div>
+                    <div id="badgeUserRole" class="text-xs text-amber-300 uppercase font-bold">Role</div>
+                </div>
+                <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2 rounded-lg font-semibold flex items-center space-x-1 shadow transition">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+        <!-- VIEW: LOGIN PORTAL -->
+        <div id="viewLogin" class="max-w-md mx-auto my-8 bg-white rounded-xl shadow-xl overflow-hidden border border-slate-200">
+            <div class="bg-govDarkNavy p-6 text-center text-white relative">
+                <div class="absolute top-0 left-0 w-full h-1 bg-govGold"></div>
+                <i class="fa-solid fa-shield-halved text-4xl text-govGold mb-2"></i>
+                <h2 class="text-xl font-bold">Portal Masuk Terpadu</h2>
+                <p class="text-xs text-slate-300 mt-1">Silakan pilih peran dan masukkan kredensial akun Anda</p>
+            </div>
+
+            <!-- Role Selector Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50">
+                <button id="tabSiswa" onclick="selectRole('siswa')" class="flex-1 py-3 text-sm font-semibold text-center border-b-2 border-govNavy text-govNavy transition">
+                    <i class="fa-solid fa-user-graduate mr-1"></i> Siswa
+                </button>
+                <button id="tabGuru" onclick="selectRole('guru')" class="flex-1 py-3 text-sm font-semibold text-center text-slate-500 border-b-2 border-transparent hover:text-govNavy transition">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i> Guru
+                </button>
+                <button id="tabAdmin" onclick="selectRole('admin')" class="flex-1 py-3 text-sm font-semibold text-center text-slate-500 border-b-2 border-transparent hover:text-govNavy transition">
+                    <i class="fa-solid fa-user-gear mr-1"></i> Admin
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- FORM LOGIN -->
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                    <input type="hidden" id="loginRole" value="siswa">
+
+                    <!-- Field Nama (Guru & Siswa) -->
+                    <div id="fieldNama" class="space-y-1">
+                        <label class="block text-xs font-bold uppercase text-slate-600">Nama Lengkap</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="inputNama" class="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-govNavy focus:border-govNavy outline-none" placeholder="Masukkan nama...">
+                        </div>
+                    </div>
+
+                    <!-- Field Kelas (Khusus Siswa) -->
+                    <div id="fieldKelas" class="space-y-1">
+                        <label class="block text-xs font-bold uppercase text-slate-600">Kelas / Rombel</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-school"></i></span>
+                            <input type="text" id="inputKelas" class="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-govNavy focus:border-govNavy outline-none" placeholder="Contoh: XII MIPA 1">
+                        </div>
+                    </div>
+
+                    <!-- Field Password -->
+                    <div id="fieldPassword" class="space-y-1">
+                        <label class="block text-xs font-bold uppercase text-slate-600">Kata Sandi / Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" id="inputPassword" class="w-full pl-10 pr-10 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-govNavy focus:border-govNavy outline-none" placeholder="Masukkan password...">
+                            <button type="button" id="btnTogglePassword" onclick="togglePasswordVisibility('inputPassword', 'iconTogglePassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i id="iconTogglePassword" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-govNavy hover:bg-govDarkNavy text-white font-bold py-2.5 rounded-lg text-sm shadow-md transition flex justify-center items-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Masuk ke Sistem</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- VIEW: ADMIN DASHBOARD -->
+        <div id="viewAdmin" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded">PANEL ADMIN GLOBAL</span>
+                    <h2 class="text-2xl font-bold text-govNavy mt-1">Pengelolaan Sistem & User Global</h2>
+                    <p class="text-sm text-slate-500">Kelola guru, pantau log aktif, dan kustomisasi identitas instansi.</p>
+                </div>
+            </div>
+
+            <!-- Admin Navigation Tabs -->
+            <div class="flex border-b border-slate-200 bg-white rounded-t-xl px-4 pt-2">
+                <button onclick="switchAdminTab('kelolaGuru')" id="adminTabKelolaGuru" class="py-3 px-4 text-sm font-bold border-b-2 border-govNavy text-govNavy flex items-center space-x-2">
+                    <i class="fa-solid fa-chalkboard-user"></i><span>Kelola Akun Guru</span>
+                </button>
+                <button onclick="switchAdminTab('logGuru')" id="adminTabLogGuru" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i><span>Rekap Log Login Guru</span>
+                </button>
+                <button onclick="switchAdminTab('pengaturan')" id="adminTabPengaturan" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders"></i><span>Identitas Portal</span>
+                </button>
+                <button onclick="switchAdminTab('rekapGlobal')" id="adminTabRekapGlobal" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy flex items-center space-x-2">
+                    <i class="fa-solid fa-database"></i><span>Rekapitulasi Global</span>
+                </button>
+            </div>
+
+            <!-- Admin Tab Content: Kelola Guru -->
+            <div id="adminContentKelolaGuru" class="bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">Daftar Guru Terdaftar</h3>
+                        <p class="text-xs text-slate-500">Buat akun guru secara manual atau upload dalam jumlah banyak via file Excel.</p>
+                    </div>
+                    <button onclick="openModalTambahGuru()" class="bg-govNavy hover:bg-govDarkNavy text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                        <i class="fa-solid fa-plus"></i><span>Tambah Guru Manual</span>
+                    </button>
+                </div>
+
+                <!-- Box Import Guru via Excel -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-xs font-bold uppercase text-slate-700">Upload Akun Guru via File Excel (.xlsx / .csv)</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="file" id="excelGuruFileInput" accept=".xlsx, .xls, .csv" class="text-xs text-slate-600 bg-white p-2 border rounded-lg w-full">
+                            <button onclick="processGuruExcelImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 whitespace-nowrap shadow">
+                                <i class="fa-solid fa-file-import"></i><span>Import Guru</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-start md:items-end justify-center space-y-1">
+                        <span class="text-xs text-slate-500">Format Header Excel: <code>nama</code>, <code>password</code></span>
+                        <button onclick="downloadGuruExcelTemplate()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-download"></i><span>Unduh Template Excel Guru</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">No</th>
+                                <th class="px-4 py-3">Nama Guru</th>
+                                <th class="px-4 py-3">Password</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableGuruBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admin Tab Content: Log Guru -->
+            <div id="adminContentLogGuru" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">Log Aktivitas Login Guru (Real-Time)</h3>
+                        <p class="text-xs text-slate-500">Mencatat waktu sesi masuk setiap guru ke sistem.</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="exportToExcel('tableLogGuru', 'Log_Login_Guru')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-file-excel"></i><span>Ekspor Excel</span>
+                        </button>
+                        <button onclick="clearGuruLogs()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-trash"></i><span>Bersihkan Log</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="tableLogGuru" class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Waktu Log</th>
+                                <th class="px-4 py-3">Nama Guru</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableLogGuruBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admin Tab Content: Pengaturan Logo & Portal -->
+            <div id="adminContentPengaturan" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <h3 class="font-bold text-lg text-slate-800">Ubah Identitas Portal & Logo Instansi</h3>
+                <form onsubmit="handleSavePortalSettings(event)" class="max-w-xl space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Judul Portal Header</label>
+                        <input type="text" id="settingHeaderTitle" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Sub-Judul Instansi</label>
+                        <input type="text" id="settingHeaderSubtitle" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">URL Logo Instansi (Atau Upload Gambar)</label>
+                        <input type="text" id="settingLogoUrl" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="https://...">
+                        <input type="file" id="settingLogoFile" accept="image/*" onchange="convertImageToBase64(this, 'settingLogoUrl')" class="text-xs text-slate-500">
+                    </div>
+                    <button type="submit" class="bg-govNavy hover:bg-govDarkNavy text-white px-4 py-2 rounded-lg text-sm font-bold shadow">
+                        Simpan Perubahan Header
+                    </button>
+                </form>
+            </div>
+
+            <!-- Admin Tab Content: Rekap Global -->
+            <div id="adminContentRekapGlobal" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-slate-800">Semua Rekapitulasi Nilai Siswa (Global)</h3>
+                    <button onclick="exportToExcel('tableGlobalNilai', 'Rekap_Nilai_Global')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                        <i class="fa-solid fa-file-excel"></i><span>Ekspor Excel Global</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="tableGlobalNilai" class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Siswa</th>
+                                <th class="px-4 py-3">Kelas</th>
+                                <th class="px-4 py-3">Mata Pelajaran</th>
+                                <th class="px-4 py-3">Jenis</th>
+                                <th class="px-4 py-3">Skor</th>
+                                <th class="px-4 py-3">Guru Pembuat</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableGlobalNilaiBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: GURU DASHBOARD -->
+        <div id="viewGuru" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded">PANEL PENDIDIK</span>
+                    <h2 class="text-2xl font-bold text-govNavy mt-1" id="guruWelcomeText">Selamat Datang, Guru</h2>
+                    <p class="text-sm text-slate-500">Kelola akun siswa binaan, paket soal TKA, dan rekap nilai ujian.</p>
+                </div>
+            </div>
+
+            <!-- Guru Tabs -->
+            <div class="flex border-b border-slate-200 bg-white rounded-t-xl px-4 pt-2 overflow-x-auto">
+                <button onclick="switchGuruTab('kelolaSiswa')" id="guruTabKelolaSiswa" class="py-3 px-4 text-sm font-bold border-b-2 border-govNavy text-govNavy whitespace-nowrap">
+                    <i class="fa-solid fa-users mr-1"></i>Kelola Akun Siswa
+                </button>
+                <button onclick="switchGuruTab('bankSoal')" id="guruTabBankSoal" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy whitespace-nowrap">
+                    <i class="fa-solid fa-file-invoice mr-1"></i>Bank Soal & Import Excel
+                </button>
+                <button onclick="switchGuruTab('pengaturanSoal')" id="guruTabPengaturanSoal" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy whitespace-nowrap">
+                    <i class="fa-solid fa-gear mr-1"></i>Pengaturan Paket Ujian
+                </button>
+                <button onclick="switchGuruTab('logSiswa')" id="guruTabLogSiswa" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy whitespace-nowrap">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>Rekap Login Siswa
+                </button>
+                <button onclick="switchGuruTab('rekapNilai')" id="guruTabRekapNilai" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy whitespace-nowrap">
+                    <i class="fa-solid fa-square-poll-vertical mr-1"></i>Rekap Nilai Siswa
+                </button>
+            </div>
+
+            <!-- Guru Tab: Kelola Siswa -->
+            <div id="guruContentKelolaSiswa" class="bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">Daftar Akun Siswa Terdaftar (Binaan)</h3>
+                        <p class="text-xs text-slate-500">Kelola akun siswa binaan Anda secara manual atau import masal dengan Excel.</p>
+                    </div>
+                    <button onclick="openModalTambahSiswa()" class="bg-govNavy hover:bg-govDarkNavy text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                        <i class="fa-solid fa-user-plus"></i><span>Buat Akun Siswa Manual</span>
+                    </button>
+                </div>
+
+                <!-- Box Import Siswa via Excel -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-xs font-bold uppercase text-slate-700">Upload Akun Siswa Binaan via Excel (.xlsx / .csv)</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="file" id="excelSiswaFileInput" accept=".xlsx, .xls, .csv" class="text-xs text-slate-600 bg-white p-2 border rounded-lg w-full">
+                            <button onclick="processSiswaExcelImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 whitespace-nowrap shadow">
+                                <i class="fa-solid fa-file-import"></i><span>Import Siswa</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-start md:items-end justify-center space-y-1">
+                        <span class="text-xs text-slate-500">Header Excel: <code>nama</code>, <code>kelas</code>, <code>password</code></span>
+                        <button onclick="downloadSiswaExcelTemplate()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-download"></i><span>Unduh Template Excel Siswa</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">No</th>
+                                <th class="px-4 py-3">Nama Siswa</th>
+                                <th class="px-4 py-3">Kelas</th>
+                                <th class="px-4 py-3">Password</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableSiswaBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Guru Tab: Bank Soal & Import -->
+            <div id="guruContentBankSoal" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-start space-x-3">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+                    <div class="text-xs text-amber-800">
+                        <span class="font-bold">Panduan Format Excel Soal:</span>
+                        Gunakan kolom Excel dengan nama header persis: <code>soal</code>, <code>pilihanA</code>, <code>pilihanB</code>, <code>pilihanC</code>, <code>pilihanD</code>, <code>kunci</code> (A/B/C/D), <code>penjelasan</code>.
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Form Import Excel / Add Manual -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+                        <h4 class="font-bold text-slate-700 text-sm">Upload Soal via File Excel / CSV</h4>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Mata Pelajaran</label>
+                            <input type="text" id="importMapelName" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Contoh: Matematika TKA">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih File Excel (.xlsx / .csv)</label>
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full text-xs text-slate-500">
+                        </div>
+                        <button onclick="processExcelImport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm flex justify-center items-center space-x-1 shadow">
+                            <i class="fa-solid fa-file-import"></i><span>Proses & Simpan Ke Bank Soal</span>
+                        </button>
+                    </div>
+
+                    <!-- Template & Stats -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                        <h4 class="font-bold text-slate-700 text-sm">Unduh Template Contoh</h4>
+                        <p class="text-xs text-slate-500">Gunakan format standar untuk menghindari kesalahan import data soal.</p>
+                        <button onclick="downloadExcelTemplate()" class="bg-govNavy hover:bg-govDarkNavy text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i><span>Unduh Template (.xlsx)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-slate-800 text-base mb-3">Bank Soal Tersedia</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                                <tr>
+                                    <th class="px-4 py-3">Mapel</th>
+                                    <th class="px-4 py-3">Jumlah Soal</th>
+                                    <th class="px-4 py-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBankSoalBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guru Tab: Pengaturan Paket Ujian -->
+            <div id="guruContentPengaturanSoal" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-slate-800">Paket Ujian Aktif Untuk Siswa</h3>
+                    <button onclick="openModalTambahPaket()" class="bg-govNavy hover:bg-govDarkNavy text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                        <i class="fa-solid fa-circle-plus"></i><span>Buat Paket Ujian Baru</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Nama Paket / Mapel</th>
+                                <th class="px-4 py-3">Jenis Ujian</th>
+                                <th class="px-4 py-3">Jumlah Soal</th>
+                                <th class="px-4 py-3">Durasi (Menit)</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablePaketBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Guru Tab: Log Siswa -->
+            <div id="guruContentLogSiswa" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-slate-800">Log Login Siswa Binaan (Real-Time)</h3>
+                    <button onclick="exportToExcel('tableLogSiswa', 'Log_Login_Siswa')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                        <i class="fa-solid fa-file-excel"></i><span>Ekspor Excel</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="tableLogSiswa" class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Waktu</th>
+                                <th class="px-4 py-3">Siswa</th>
+                                <th class="px-4 py-3">Kelas</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableLogSiswaBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Guru Tab: Rekap Nilai -->
+            <div id="guruContentRekapNilai" class="hidden bg-white p-6 rounded-b-xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-slate-800">Hasil & Nilai Latihan / Try Out Siswa</h3>
+                    <button onclick="exportToExcel('tableGuruNilai', 'Rekap_Nilai_Siswa')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                        <i class="fa-solid fa-file-excel"></i><span>Ekspor Excel</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="tableGuruNilai" class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Nama Siswa</th>
+                                <th class="px-4 py-3">Kelas</th>
+                                <th class="px-4 py-3">Mapel</th>
+                                <th class="px-4 py-3">Jenis</th>
+                                <th class="px-4 py-3">Skor (Nilai)</th>
+                                <th class="px-4 py-3">Waktu Selesai</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableGuruNilaiBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: SISWA DASHBOARD -->
+        <div id="viewSiswa" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded">PANEL SISWA</span>
+                <h2 class="text-2xl font-bold text-govNavy mt-1" id="siswaWelcomeText">Selamat Datang, Siswa</h2>
+                <p class="text-sm text-slate-500">Pilih paket latihan atau Try Out yang dikirimkan oleh Guru Anda.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Box Latihan Soal -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center space-x-3 text-blue-600">
+                        <i class="fa-solid fa-book-open-reader text-2xl"></i>
+                        <h3 class="text-lg font-bold text-slate-800">Latihan Soal Mandiri</h3>
+                    </div>
+                    <p class="text-xs text-slate-500">Mengerjakan latihan tanpa batasan waktu ketat. Pembahasan dapat dilihat setelah pengiriman jawaban.</p>
+                    <div id="listLatihanPaket" class="space-y-2">
+                        <!-- JS Loaded -->
+                    </div>
+                </div>
+
+                <!-- Box Try Out -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center space-x-3 text-amber-600">
+                        <i class="fa-solid fa-stopwatch text-2xl"></i>
+                        <h3 class="text-lg font-bold text-slate-800">Try Out TKA Nasional</h3>
+                    </div>
+                    <p class="text-xs text-slate-500">Simulasi Try Out resmi berdurasi. Timer akan berjalan otomatis setelah tombol Mulai ditekan.</p>
+                    <div id="listTryoutPaket" class="space-y-2">
+                        <!-- JS Loaded -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rekap Nilai Pribadi Siswa -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="font-bold text-lg text-slate-800">Riwayat Hasil Evaluasi Saya</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3">Mapel</th>
+                                <th class="px-4 py-3">Jenis</th>
+                                <th class="px-4 py-3">Skor</th>
+                                <th class="px-4 py-3">Waktu</th>
+                                <th class="px-4 py-3 text-center">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableSiswaNilaiBody">
+                            <!-- Populated JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: EXAM ROOM (RUANG UJIAN) -->
+        <div id="viewExam" class="hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-govGold flex justify-between items-center sticky top-20 z-30">
+                <div>
+                    <h3 id="examTitle" class="font-bold text-base text-govNavy">Nama Ujian</h3>
+                    <span id="examTypeBadge" class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800">Latihan</span>
+                </div>
+                <div id="examTimerBox" class="flex items-center space-x-2 bg-red-50 border border-red-200 px-4 py-2 rounded-lg text-red-600 font-mono font-bold text-lg">
+                    <i class="fa-solid fa-clock"></i>
+                    <span id="examTimerDisplay">00:00:00</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Question Area -->
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <span class="font-bold text-sm text-slate-600">Soal No. <span id="currentQuestionNum">1</span></span>
+                    </div>
+
+                    <div id="questionText" class="text-slate-800 text-base leading-relaxed">
+                        Loading soal...
+                    </div>
+
+                    <!-- Choices -->
+                    <div id="optionsContainer" class="space-y-3 pt-2">
+                        <!-- Choices JS -->
+                    </div>
+
+                    <!-- Navigation Controls -->
+                    <div class="flex justify-between items-center border-t pt-4">
+                        <button onclick="prevQuestion()" id="btnPrevQue" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Sebelum
+                        </button>
+                        <button onclick="nextQuestion()" id="btnNextQue" class="bg-govNavy hover:bg-govDarkNavy text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Berikut <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Grid Navigation -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h4 class="font-bold text-sm text-slate-700">Navigasi Soal</h4>
+                    <div id="questionGrid" class="grid grid-cols-5 gap-2">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                    <button onclick="confirmFinishExam()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow transition">
+                        Selesaikan & Kirim
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: EXAM RESULT / DISCUSSION -->
+        <div id="viewResult" class="hidden max-w-4xl mx-auto space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center space-y-3">
+                <i class="fa-solid fa-circle-check text-5xl text-emerald-500"></i>
+                <h2 class="text-2xl font-bold text-govNavy">Ujian Selesai!</h2>
+                <div class="text-4xl font-extrabold text-slate-800" id="resultScore">0</div>
+                <p class="text-xs text-slate-500" id="resultMeta">Detail hasil pengerjaan Anda</p>
+                <button onclick="showView('viewSiswa')" class="bg-govNavy hover:bg-govDarkNavy text-white px-6 py-2 rounded-lg text-sm font-bold">
+                    Kembali ke Dashboard Siswa
+                </button>
+            </div>
+
+            <!-- Review / Pembahasan -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                <h3 class="font-bold text-lg text-slate-800">Kunci Jawaban & Pembahasan</h3>
+                <div id="discussionContainer" class="space-y-6">
+                    <!-- Populated JS -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODALS -->
+
+    <!-- Modal Tambah/Edit Guru -->
+    <div id="modalGuru" class="fixed inset-0 modal-backdrop hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800" id="modalGuruTitle">Tambah Akun Guru</h3>
+            <form onsubmit="handleSaveGuru(event)" class="space-y-3">
+                <input type="hidden" id="editGuruId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Guru</label>
+                    <input type="text" id="modalGuruNama" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="modalGuruPassword" class="w-full px-3 py-2 border rounded-lg text-sm pr-10" required>
+                        <button type="button" onclick="togglePasswordVisibility('modalGuruPassword', 'iconModalGuru')" class="absolute right-3 top-2.5 text-slate-400">
+                            <i id="iconModalGuru" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-3">
+                    <button type="button" onclick="closeModal('modalGuru')" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-govNavy rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Siswa -->
+    <div id="modalSiswa" class="fixed inset-0 modal-backdrop hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800" id="modalSiswaTitle">Buat Akun Siswa</h3>
+            <form onsubmit="handleSaveSiswa(event)" class="space-y-3">
+                <input type="hidden" id="editSiswaId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Siswa</label>
+                    <input type="text" id="modalSiswaNama" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Kelas / Rombel</label>
+                    <input type="text" id="modalSiswaKelas" class="w-full px-3 py-2 border rounded-lg text-sm" required placeholder="Contoh: XII IPA 2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Password Siswa</label>
+                    <div class="relative">
+                        <input type="password" id="modalSiswaPassword" class="w-full px-3 py-2 border rounded-lg text-sm pr-10" required>
+                        <button type="button" onclick="togglePasswordVisibility('modalSiswaPassword', 'iconModalSiswa')" class="absolute right-3 top-2.5 text-slate-400">
+                            <i id="iconModalSiswa" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-3">
+                    <button type="button" onclick="closeModal('modalSiswa')" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-govNavy rounded-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Buat Paket Ujian -->
+    <div id="modalPaket" class="fixed inset-0 modal-backdrop hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800">Buat / Atur Paket Ujian</h3>
+            <form onsubmit="handleSavePaket(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Pilih Bank Soal / Mapel</label>
+                    <select id="modalPaketMapel" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                        <!-- JS Loaded -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Ujian</label>
+                    <select id="modalPaketJenis" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                        <option value="Latihan">Latihan Soal</option>
+                        <option value="Try Out">Try Out TKA</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Jumlah Soal Diberikan</label>
+                    <input type="number" id="modalPaketJumlah" min="1" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Durasi Pengerjaan (Menit)</label>
+                    <input type="number" id="modalPaketDurasi" min="5" value="60" class="w-full px-3 py-2 border rounded-lg text-sm" required>
+                </div>
+                <div class="flex justify-end space-x-2 pt-3">
+                    <button type="button" onclick="closeModal('modalPaket')" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-govNavy rounded-lg">Terbitkan Paket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Realtime Sync Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration & Initialization
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-tka-cbt-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-api-key",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global State & Data Store
+        window.dbStore = {
+            currentUser: null,
+            gurus: [],
+            siswas: [],
+            bankSoal: [],
+            paketUjian: [],
+            logGuru: [],
+            logSiswa: [],
+            rekapNilai: [],
+            settings: {
+                headerTitle: 'Sistem CBT Tes Kemampuan Akademik (TKA)',
+                headerSubtitle: 'Portal Evaluasi Nasional Pemetaan Mutu Pendidikan',
+                logoUrl: 'https://placehold.co/100x100/0d3b66/ffffff?text=TKA+RI'
+            }
+        };
+
+        // Helper Re-render lokal otomatis saat data berubah
+        window.triggerRenderByCollection = function(col) {
+            if (col === 'gurus' && typeof renderGuruTable === 'function') renderGuruTable();
+            if (col === 'siswas' && typeof renderSiswaTable === 'function') renderSiswaTable();
+            if (col === 'bankSoal' && typeof renderBankSoalTable === 'function') { renderBankSoalTable(); renderPaketMapelDropdown(); }
+            if (col === 'paketUjian' && typeof renderPaketTable === 'function') { renderPaketTable(); renderSiswaPaketList(); }
+            if (col === 'logGuru' && typeof renderLogGuruTable === 'function') renderLogGuruTable();
+            if (col === 'logSiswa' && typeof renderLogSiswaTable === 'function') renderLogSiswaTable();
+            if (col === 'rekapNilai' && typeof renderRekapNilaiTables === 'function') { renderRekapNilaiTables(); renderGlobalNilaiTable(); }
+            if (col === 'settings' && typeof applySettings === 'function') applySettings();
+        };
+
+        // Global DB Save Helper
+        window.saveToFirestore = async function(col, id, data) {
+            // Update memori lokal secara instan agar UI merespons tanpa jeda
+            if (window.dbStore[col]) {
+                if (Array.isArray(window.dbStore[col])) {
+                    const idx = window.dbStore[col].findIndex(item => item.id === id);
+                    if (idx >= 0) window.dbStore[col][idx] = data;
+                    else window.dbStore[col].push(data);
+                } else {
+                    window.dbStore[col] = data;
+                }
+                window.triggerRenderByCollection(col);
+            }
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', col, id);
+                await setDoc(docRef, data, { merge: true });
+            } catch (err) {
+                console.warn("Firestore Save Warning (Tetap berjalan pada memori lokal):", err);
+            }
+        };
+
+        window.deleteFromFirestore = async function(col, id) {
+            // Hapus dari memori lokal secara instan
+            if (window.dbStore[col] && Array.isArray(window.dbStore[col])) {
+                window.dbStore[col] = window.dbStore[col].filter(item => item.id !== id);
+                window.triggerRenderByCollection(col);
+            }
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', col, id);
+                await deleteDoc(docRef);
+            } catch (err) {
+                console.warn("Firestore Delete Warning (Tetap berjalan pada memori lokal):", err);
+            }
+        };
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Firebase Auth fallback to local mode:", err);
+            }
+
+            // Sync Firestore real-time collections
+            const collections = ['gurus', 'siswas', 'bankSoal', 'paketUjian', 'logGuru', 'logSiswa', 'rekapNilai', 'settings'];
+            
+            collections.forEach(colName => {
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', colName);
+                    onSnapshot(colRef, (snapshot) => {
+                        if (colName === 'settings') {
+                            snapshot.docs.forEach(docSnap => {
+                                if (docSnap.id === 'config') {
+                                    window.dbStore.settings = { ...window.dbStore.settings, ...docSnap.data() };
+                                }
+                            });
+                            if (typeof window.applySettings === 'function') window.applySettings();
+                        } else {
+                            const list = [];
+                            snapshot.docs.forEach(docSnap => {
+                                list.push({ id: docSnap.id, ...docSnap.data() });
+                            });
+                            if (list.length > 0) {
+                                window.dbStore[colName] = list;
+                            }
+                        }
+                        if (typeof window.triggerRenderByCollection === 'function') {
+                            window.triggerRenderByCollection(colName);
+                        }
+                    }, (err) => {
+                        console.warn(`Firestore snapshot listener error [${colName}]:`, err);
+                    });
+                } catch (e) {
+                    console.warn(`Firestore initialization error for collection ${colName}:`, e);
+                }
+            });
+
+            // Fallback load mock data if store remains unpopulated
+            setTimeout(() => {
+                if (typeof loadInitialMockData === 'function') {
+                    loadInitialMockData();
+                }
+            }, 300);
+        }
+
+        initAuth();
+    </script>
+
+    <script>
+        // Data Fallback & UI State
+        let currentRole = 'siswa';
+        let activeExam = null;
+        let examTimerInterval = null;
+        let examAnswers = {};
+
+        // Mock Initial Setup
+        function loadInitialMockData() {
+            if (!window.dbStore.gurus.length) {
+                window.dbStore.gurus = [
+                    { id: 'g1', nama: 'Budi Santoso, S.Pd', password: 'guru123' }
+                ];
+            }
+            if (!window.dbStore.siswas.length) {
+                window.dbStore.siswas = [
+                    { id: 's1', nama: 'Anisa Rahma', kelas: 'XII MIPA 1', password: '123', guruId: 'g1', guruNama: 'Budi Santoso, S.Pd' }
+                ];
+            }
+            if (!window.dbStore.bankSoal.length) {
+                window.dbStore.bankSoal = [
+                    {
+                        id: 'b1',
+                        mapel: 'Matematika Dasar TKA',
+                        guruId: 'g1',
+                        soalList: [
+                            {
+                                id: 1,
+                                soal: 'Jika 2x + 5 = 15, berapakah nilai x?',
+                                pilihanA: '3', pilihanB: '5', pilihanC: '7', pilihanD: '10',
+                                kunci: 'B',
+                                penjelasan: '2x = 15 - 5 => 2x = 10 => x = 5.'
+                            },
+                            {
+                                id: 2,
+                                soal: 'Nilai dari 3 pangkat 3 adalah...',
+                                pilihanA: '9', pilihanB: '18', pilihanC: '27', pilihanD: '81',
+                                kunci: 'C',
+                                penjelasan: '3 x 3 x 3 = 27.'
+                            }
+                        ]
+                    }
+                ];
+            }
+            if (!window.dbStore.paketUjian.length) {
+                window.dbStore.paketUjian = [
+                    { id: 'p1', bankId: 'b1', mapel: 'Matematika Dasar TKA', jenis: 'Latihan', jumlahSoal: 2, durasi: 30, guruId: 'g1' },
+                    { id: 'p2', bankId: 'b1', mapel: 'Matematika Dasar TKA', jenis: 'Try Out', jumlahSoal: 2, durasi: 60, guruId: 'g1' }
+                ];
+            }
+            renderGuruTable();
+            renderSiswaTable();
+            renderBankSoalTable();
+            renderPaketTable();
+        }
+
+        // Toggle Role in Login
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('loginRole').value = role;
+
+            const tabs = ['siswa', 'guru', 'admin'];
+            tabs.forEach(r => {
+                const tabEl = document.getElementById('tab' + r.charAt(0).toUpperCase() + r.slice(1));
+                if (r === role) {
+                    tabEl.className = 'flex-1 py-3 text-sm font-semibold text-center border-b-2 border-govNavy text-govNavy transition';
+                } else {
+                    tabEl.className = 'flex-1 py-3 text-sm font-semibold text-center text-slate-500 border-b-2 border-transparent hover:text-govNavy transition';
+                }
+            });
+
+            // Toggle Input Fields
+            document.getElementById('fieldNama').style.display = (role === 'admin') ? 'none' : 'block';
+            document.getElementById('fieldKelas').style.display = (role === 'siswa') ? 'block' : 'none';
+        }
+
+        // Toggle Password Visibility
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // LOGIN HANDLER
+        function handleLogin(e) {
+            e.preventDefault();
+            const role = document.getElementById('loginRole').value;
+            const nama = document.getElementById('inputNama').value.trim();
+            const kelas = document.getElementById('inputKelas').value.trim();
+            const password = document.getElementById('inputPassword').value.trim();
+
+            if (role === 'admin') {
+                if (password === '050393') {
+                    window.dbStore.currentUser = { role: 'admin', nama: 'Administrator' };
+                    updateUserBadge();
+                    showView('viewAdmin');
+                } else {
+                    alert('Password Admin Salah!');
+                }
+            } else if (role === 'guru') {
+                const found = window.dbStore.gurus.find(g => g.nama.toLowerCase() === nama.toLowerCase() && g.password === password);
+                if (found) {
+                    window.dbStore.currentUser = { ...found, role: 'guru' };
+                    updateUserBadge();
+                    showView('viewGuru');
+                    
+                    // Log Login Guru
+                    const logObj = { id: 'logG_' + Date.now(), nama: found.nama, waktu: new Date().toLocaleString(), status: 'Berhasil' };
+                    if (window.saveToFirestore) window.saveToFirestore('logGuru', logObj.id, logObj);
+                } else {
+                    alert('Nama Guru atau Password Tidak Ditemukan!');
+                }
+            } else if (role === 'siswa') {
+                const found = window.dbStore.siswas.find(s => s.nama.toLowerCase() === nama.toLowerCase() && s.kelas.toLowerCase() === kelas.toLowerCase() && s.password === password);
+                if (found) {
+                    window.dbStore.currentUser = { ...found, role: 'siswa' };
+                    updateUserBadge();
+                    showView('viewSiswa');
+
+                    // Log Login Siswa
+                    const logObj = { id: 'logS_' + Date.now(), nama: found.nama, kelas: found.kelas, guruId: found.guruId, waktu: new Date().toLocaleString() };
+                    if (window.saveToFirestore) window.saveToFirestore('logSiswa', logObj.id, logObj);
+                } else {
+                    alert('Data Siswa (Nama, Kelas, Password) Tidak Ditemukan atau Belum Dibuat oleh Guru!');
+                }
+            }
+
+            // Clear Login Form
+            document.getElementById('loginForm').reset();
+        }
+
+        function handleLogout() {
+            window.dbStore.currentUser = null;
+            document.getElementById('userHeaderBadge').classList.add('hidden');
+            showView('viewLogin');
+        }
+
+        function updateUserBadge() {
+            const user = window.dbStore.currentUser;
+            if (!user) return;
+            document.getElementById('userHeaderBadge').classList.remove('hidden');
+            document.getElementById('badgeUserName').textContent = user.nama;
+            document.getElementById('badgeUserRole').textContent = user.role.toUpperCase();
+
+            if (user.role === 'guru') {
+                document.getElementById('guruWelcomeText').textContent = `Selamat Datang, ${user.nama}`;
+            } else if (user.role === 'siswa') {
+                document.getElementById('siswaWelcomeText').textContent = `Selamat Datang, ${user.nama} (${user.kelas})`;
+            }
+        }
+
+        // View Navigation
+        function showView(viewId) {
+            const views = ['viewLogin', 'viewAdmin', 'viewGuru', 'viewSiswa', 'viewExam', 'viewResult'];
+            views.forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+
+            if (viewId === 'viewGuru') renderGuruDashboardAll();
+            if (viewId === 'viewSiswa') renderSiswaDashboardAll();
+            if (viewId === 'viewAdmin') renderAdminDashboardAll();
+        }
+
+        // ADMIN FUNCTIONS
+        function switchAdminTab(tabName) {
+            const tabs = ['kelolaGuru', 'logGuru', 'pengaturan', 'rekapGlobal'];
+            tabs.forEach(t => {
+                const tabBtn = document.getElementById('adminTab' + t.charAt(0).toUpperCase() + t.slice(1));
+                const contentEl = document.getElementById('adminContent' + t.charAt(0).toUpperCase() + t.slice(1));
+                
+                if (t === tabName) {
+                    tabBtn.className = 'py-3 px-4 text-sm font-bold border-b-2 border-govNavy text-govNavy flex items-center space-x-2';
+                    contentEl.classList.remove('hidden');
+                } else {
+                    tabBtn.className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy flex items-center space-x-2';
+                    contentEl.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderAdminDashboardAll() {
+            renderGuruTable();
+            renderLogGuruTable();
+            renderGlobalNilaiTable();
+            applySettings();
+        }
+
+        function renderGuruTable() {
+            const tbody = document.getElementById('tableGuruBody');
+            tbody.innerHTML = '';
+            window.dbStore.gurus.forEach((g, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3">${idx + 1}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-800">${g.nama}</td>
+                    <td class="px-4 py-3 font-mono">${g.password}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick="editGuru('${g.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteGuru('${g.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openModalTambahGuru() {
+            document.getElementById('editGuruId').value = '';
+            document.getElementById('modalGuruTitle').textContent = 'Tambah Akun Guru';
+            document.getElementById('modalGuruNama').value = '';
+            document.getElementById('modalGuruPassword').value = '';
+            document.getElementById('modalGuru').classList.remove('hidden');
+        }
+
+        function editGuru(id) {
+            const g = window.dbStore.gurus.find(item => item.id === id);
+            if (!g) return;
+            document.getElementById('editGuruId').value = g.id;
+            document.getElementById('modalGuruTitle').textContent = 'Edit Akun Guru';
+            document.getElementById('modalGuruNama').value = g.nama;
+            document.getElementById('modalGuruPassword').value = g.password;
+            document.getElementById('modalGuru').classList.remove('hidden');
+        }
+
+        function handleSaveGuru(e) {
+            e.preventDefault();
+            const id = document.getElementById('editGuruId').value || 'guru_' + Date.now();
+            const nama = document.getElementById('modalGuruNama').value.trim();
+            const password = document.getElementById('modalGuruPassword').value.trim();
+
+            const guruObj = { id, nama, password };
+            if (window.saveToFirestore) window.saveToFirestore('gurus', id, guruObj);
+
+            closeModal('modalGuru');
+        }
+
+        function deleteGuru(id) {
+            if (confirm('Hapus akun guru ini?')) {
+                if (window.deleteFromFirestore) window.deleteFromFirestore('gurus', id);
+            }
+        }
+
+        // IMPORT AKUN GURU VIA EXCEL (ADMIN)
+        function processGuruExcelImport() {
+            const fileInput = document.getElementById('excelGuruFileInput');
+            if (!fileInput.files.length) {
+                alert('Pilih file Excel/CSV akun guru terlebih dahulu!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                if (!jsonData || !jsonData.length) {
+                    alert('File Excel kosong atau format tidak sesuai!');
+                    return;
+                }
+
+                let count = 0;
+                jsonData.forEach((row, idx) => {
+                    if (row.nama && row.password) {
+                        const guruObj = {
+                            id: 'guru_' + Date.now() + '_' + idx,
+                            nama: row.nama.toString().trim(),
+                            password: row.password.toString().trim()
+                        };
+                        if (window.saveToFirestore) window.saveToFirestore('gurus', guruObj.id, guruObj);
+                        count++;
+                    }
+                });
+
+                alert(`Berhasil mengimpor ${count} akun Guru dari Excel!`);
+                fileInput.value = '';
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function downloadGuruExcelTemplate() {
+            const templateData = [
+                { nama: 'Budi Santoso, S.Pd', password: 'guru123password' },
+                { nama: 'Siti Aminah, M.Pd', password: 'guru456password' }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "TemplateGuru");
+            XLSX.writeFile(wb, "Template_Import_Akun_Guru.xlsx");
+        }
+
+        // IMPORT AKUN SISWA VIA EXCEL (GURU)
+        function processSiswaExcelImport() {
+            const fileInput = document.getElementById('excelSiswaFileInput');
+            const guru = window.dbStore.currentUser;
+
+            if (!guru || guru.role !== 'guru') {
+                alert('Anda harus masuk sebagai Guru untuk mengimpor akun siswa!');
+                return;
+            }
+
+            if (!fileInput.files.length) {
+                alert('Pilih file Excel/CSV akun siswa terlebih dahulu!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                if (!jsonData || !jsonData.length) {
+                    alert('File Excel kosong atau format tidak sesuai!');
+                    return;
+                }
+
+                let count = 0;
+                jsonData.forEach((row, idx) => {
+                    if (row.nama && row.kelas && row.password) {
+                        const siswaObj = {
+                            id: 'siswa_' + Date.now() + '_' + idx,
+                            nama: row.nama.toString().trim(),
+                            kelas: row.kelas.toString().trim(),
+                            password: row.password.toString().trim(),
+                            guruId: guru.id,
+                            guruNama: guru.nama
+                        };
+                        if (window.saveToFirestore) window.saveToFirestore('siswas', siswaObj.id, siswaObj);
+                        count++;
+                    }
+                });
+
+                alert(`Berhasil mengimpor ${count} akun Siswa binaan Anda dari Excel!`);
+                fileInput.value = '';
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function downloadSiswaExcelTemplate() {
+            const templateData = [
+                { nama: 'Anisa Rahma', kelas: 'XII MIPA 1', password: 'siswa123pass' },
+                { nama: 'Rizky Pratama', kelas: 'XII MIPA 1', password: 'siswa456pass' }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "TemplateSiswa");
+            XLSX.writeFile(wb, "Template_Import_Akun_Siswa.xlsx");
+        }
+
+        function renderLogGuruTable() {
+            const tbody = document.getElementById('tableLogGuruBody');
+            tbody.innerHTML = '';
+            window.dbStore.logGuru.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-xs">${l.waktu}</td>
+                    <td class="px-4 py-3 font-semibold">${l.nama}</td>
+                    <td class="px-4 py-3"><span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">${l.status}</span></td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteLogGuru('${l.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteLogGuru(id) {
+            if (window.deleteFromFirestore) window.deleteFromFirestore('logGuru', id);
+        }
+
+        function clearGuruLogs() {
+            if (confirm('Bersihkan semua log guru?')) {
+                window.dbStore.logGuru.forEach(l => {
+                    if (window.deleteFromFirestore) window.deleteFromFirestore('logGuru', l.id);
+                });
+            }
+        }
+
+        function handleSavePortalSettings(e) {
+            e.preventDefault();
+            const title = document.getElementById('settingHeaderTitle').value;
+            const subtitle = document.getElementById('settingHeaderSubtitle').value;
+            const logo = document.getElementById('settingLogoUrl').value;
+
+            const config = { headerTitle: title, headerSubtitle: subtitle, logoUrl: logo };
+            if (window.saveToFirestore) window.saveToFirestore('settings', 'config', config);
+            alert('Pengaturan identitas portal tersimpan!');
+        }
+
+        function applySettings() {
+            const s = window.dbStore.settings;
+            document.getElementById('appHeaderTitle').textContent = s.headerTitle;
+            document.getElementById('appHeaderSubtitle').textContent = s.headerSubtitle;
+            document.getElementById('appHeaderLogo').src = s.logoUrl;
+
+            document.getElementById('settingHeaderTitle').value = s.headerTitle;
+            document.getElementById('settingHeaderSubtitle').value = s.headerSubtitle;
+            document.getElementById('settingLogoUrl').value = s.logoUrl;
+        }
+
+        function convertImageToBase64(input, targetInputId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById(targetInputId).value = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function renderGlobalNilaiTable() {
+            const tbody = document.getElementById('tableGlobalNilaiBody');
+            tbody.innerHTML = '';
+            window.dbStore.rekapNilai.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold">${r.siswaNama}</td>
+                    <td class="px-4 py-3">${r.kelas}</td>
+                    <td class="px-4 py-3">${r.mapel}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${r.jenis === 'Try Out' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${r.jenis}</span></td>
+                    <td class="px-4 py-3 font-bold text-govNavy">${r.skor}</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${r.guruNama || '-'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteRekapNilai('${r.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // GURU FUNCTIONS
+        function switchGuruTab(tabName) {
+            const tabs = ['kelolaSiswa', 'bankSoal', 'pengaturanSoal', 'logSiswa', 'rekapNilai'];
+            tabs.forEach(t => {
+                const tabBtn = document.getElementById('guruTab' + t.charAt(0).toUpperCase() + t.slice(1));
+                const contentEl = document.getElementById('guruContent' + t.charAt(0).toUpperCase() + t.slice(1));
+
+                if (t === tabName) {
+                    tabBtn.className = 'py-3 px-4 text-sm font-bold border-b-2 border-govNavy text-govNavy whitespace-nowrap';
+                    contentEl.classList.remove('hidden');
+                } else {
+                    tabBtn.className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-govNavy whitespace-nowrap';
+                    contentEl.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderGuruDashboardAll() {
+            renderSiswaTable();
+            renderBankSoalTable();
+            renderPaketTable();
+            renderLogSiswaTable();
+            renderRekapNilaiTables();
+            renderPaketMapelDropdown();
+        }
+
+        function renderSiswaTable() {
+            const tbody = document.getElementById('tableSiswaBody');
+            tbody.innerHTML = '';
+            const currentGuru = window.dbStore.currentUser;
+
+            // Filter siswa under this guru
+            const mySiswas = window.dbStore.siswas.filter(s => s.guruId === currentGuru?.id);
+
+            mySiswas.forEach((s, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3">${idx + 1}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-800">${s.nama}</td>
+                    <td class="px-4 py-3">${s.kelas}</td>
+                    <td class="px-4 py-3 font-mono">${s.password}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick="editSiswa('${s.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteSiswa('${s.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openModalTambahSiswa() {
+            document.getElementById('editSiswaId').value = '';
+            document.getElementById('modalSiswaTitle').textContent = 'Buat Akun Siswa Baru';
+            document.getElementById('modalSiswaNama').value = '';
+            document.getElementById('modalSiswaKelas').value = '';
+            document.getElementById('modalSiswaPassword').value = '';
+            document.getElementById('modalSiswa').classList.remove('hidden');
+        }
+
+        function editSiswa(id) {
+            const s = window.dbStore.siswas.find(item => item.id === id);
+            if (!s) return;
+            document.getElementById('editSiswaId').value = s.id;
+            document.getElementById('modalSiswaTitle').textContent = 'Edit Akun Siswa';
+            document.getElementById('modalSiswaNama').value = s.nama;
+            document.getElementById('modalSiswaKelas').value = s.kelas;
+            document.getElementById('modalSiswaPassword').value = s.password;
+            document.getElementById('modalSiswa').classList.remove('hidden');
+        }
+
+        function handleSaveSiswa(e) {
+            e.preventDefault();
+            const id = document.getElementById('editSiswaId').value || 'siswa_' + Date.now();
+            const nama = document.getElementById('modalSiswaNama').value.trim();
+            const kelas = document.getElementById('modalSiswaKelas').value.trim();
+            const password = document.getElementById('modalSiswaPassword').value.trim();
+            const guru = window.dbStore.currentUser;
+
+            const siswaObj = { id, nama, kelas, password, guruId: guru?.id || 'g1', guruNama: guru?.nama || 'Guru' };
+            if (window.saveToFirestore) window.saveToFirestore('siswas', id, siswaObj);
+
+            closeModal('modalSiswa');
+        }
+
+        function deleteSiswa(id) {
+            if (confirm('Hapus siswa ini?')) {
+                if (window.deleteFromFirestore) window.deleteFromFirestore('siswas', id);
+            }
+        }
+
+        // EXCEL BANK SOAL IMPORT
+        function processExcelImport() {
+            const mapel = document.getElementById('importMapelName').value.trim();
+            const fileInput = document.getElementById('excelFileInput');
+
+            if (!mapel) {
+                alert('Harap masukkan nama mata pelajaran!');
+                return;
+            }
+            if (!fileInput.files.length) {
+                alert('Pilih file Excel/CSV terlebih dahulu!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                if (!jsonData || !jsonData.length) {
+                    alert('File Excel kosong atau format tidak sesuai!');
+                    return;
+                }
+
+                const soalList = jsonData.map((row, idx) => ({
+                    id: idx + 1,
+                    soal: row.soal || 'Soal tanpa teks',
+                    pilihanA: row.pilihanA || '-',
+                    pilihanB: row.pilihanB || '-',
+                    pilihanC: row.pilihanC || '-',
+                    pilihanD: row.pilihanD || '-',
+                    kunci: (row.kunci || 'A').toString().toUpperCase().trim(),
+                    penjelasan: row.penjelasan || 'Tidak ada penjelasan.'
+                }));
+
+                const guru = window.dbStore.currentUser;
+                const bankObj = {
+                    id: 'bank_' + Date.now(),
+                    mapel: mapel,
+                    guruId: guru?.id || 'g1',
+                    soalList: soalList
+                };
+
+                if (window.saveToFirestore) window.saveToFirestore('bankSoal', bankObj.id, bankObj);
+
+                alert(`Berhasil mengimpor ${soalList.length} soal untuk ${mapel}!`);
+                document.getElementById('importMapelName').value = '';
+                fileInput.value = '';
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function downloadExcelTemplate() {
+            const templateData = [
+                {
+                    soal: 'Ibu kota negara Indonesia adalah...',
+                    pilihanA: 'Bandung',
+                    pilihanB: 'Jakarta',
+                    pilihanC: 'Surabaya',
+                    pilihanD: 'Medan',
+                    kunci: 'B',
+                    penjelasan: 'Jakarta adalah Ibu Kota Negara RI.'
+                }
+            ];
+
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "TemplateSoal");
+            XLSX.writeFile(wb, "Template_Import_Soal_TKA.xlsx");
+        }
+
+        function renderBankSoalTable() {
+            const tbody = document.getElementById('tableBankSoalBody');
+            tbody.innerHTML = '';
+            const guru = window.dbStore.currentUser;
+            const myBanks = window.dbStore.bankSoal.filter(b => b.guruId === guru?.id);
+
+            myBanks.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-slate-800">${b.mapel}</td>
+                    <td class="px-4 py-3"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-bold">${b.soalList.length} Soal</span></td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteBankSoal('${b.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteBankSoal(id) {
+            if (confirm('Hapus bank soal ini?')) {
+                if (window.deleteFromFirestore) window.deleteFromFirestore('bankSoal', id);
+            }
+        }
+
+        function renderPaketMapelDropdown() {
+            const select = document.getElementById('modalPaketMapel');
+            select.innerHTML = '';
+            const guru = window.dbStore.currentUser;
+            const myBanks = window.dbStore.bankSoal.filter(b => b.guruId === guru?.id);
+
+            myBanks.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = `${b.mapel} (${b.soalList.length} soal)`;
+                select.appendChild(opt);
+            });
+        }
+
+        function openModalTambahPaket() {
+            renderPaketMapelDropdown();
+            document.getElementById('modalPaket').classList.remove('hidden');
+        }
+
+        function handleSavePaket(e) {
+            e.preventDefault();
+            const bankId = document.getElementById('modalPaketMapel').value;
+            const jenis = document.getElementById('modalPaketJenis').value;
+            const jumlah = parseInt(document.getElementById('modalPaketJumlah').value);
+            const durasi = parseInt(document.getElementById('modalPaketDurasi').value);
+
+            const bank = window.dbStore.bankSoal.find(b => b.id === bankId);
+            if (!bank) return;
+
+            const guru = window.dbStore.currentUser;
+            const paketObj = {
+                id: 'paket_' + Date.now(),
+                bankId,
+                mapel: bank.mapel,
+                jenis,
+                jumlahSoal: Math.min(jumlah, bank.soalList.length),
+                durasi,
+                guruId: guru?.id || 'g1'
+            };
+
+            if (window.saveToFirestore) window.saveToFirestore('paketUjian', paketObj.id, paketObj);
+            closeModal('modalPaket');
+        }
+
+        function renderPaketTable() {
+            const tbody = document.getElementById('tablePaketBody');
+            tbody.innerHTML = '';
+            const guru = window.dbStore.currentUser;
+            const myPakets = window.dbStore.paketUjian.filter(p => p.guruId === guru?.id);
+
+            myPakets.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-slate-800">${p.mapel}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${p.jenis === 'Try Out' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${p.jenis}</span></td>
+                    <td class="px-4 py-3">${p.jumlahSoal} Soal</td>
+                    <td class="px-4 py-3">${p.durasi} Menit</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deletePaket('${p.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deletePaket(id) {
+            if (confirm('Hapus paket ujian ini?')) {
+                if (window.deleteFromFirestore) window.deleteFromFirestore('paketUjian', id);
+            }
+        }
+
+        function renderLogSiswaTable() {
+            const tbody = document.getElementById('tableLogSiswaBody');
+            tbody.innerHTML = '';
+            const guru = window.dbStore.currentUser;
+            const myLogs = window.dbStore.logSiswa.filter(l => l.guruId === guru?.id);
+
+            myLogs.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-xs">${l.waktu}</td>
+                    <td class="px-4 py-3 font-semibold">${l.nama}</td>
+                    <td class="px-4 py-3">${l.kelas}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteLogSiswa('${l.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteLogSiswa(id) {
+            if (window.deleteFromFirestore) window.deleteFromFirestore('logSiswa', id);
+        }
+
+        function renderRekapNilaiTables() {
+            const tbody = document.getElementById('tableGuruNilaiBody');
+            tbody.innerHTML = '';
+            const guru = window.dbStore.currentUser;
+            const myNilai = window.dbStore.rekapNilai.filter(r => r.guruId === guru?.id);
+
+            myNilai.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold">${r.siswaNama}</td>
+                    <td class="px-4 py-3">${r.kelas}</td>
+                    <td class="px-4 py-3">${r.mapel}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${r.jenis === 'Try Out' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${r.jenis}</span></td>
+                    <td class="px-4 py-3 font-bold text-govNavy">${r.skor}</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${r.waktu}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteRekapNilai('${r.id}')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Also render for Siswa personal dashboard
+            renderSiswaPersonalNilai();
+        }
+
+        function deleteRekapNilai(id) {
+            if (confirm('Hapus rekap nilai ini?')) {
+                if (window.deleteFromFirestore) window.deleteFromFirestore('rekapNilai', id);
+            }
+        }
+
+        // SISWA FUNCTIONS & EXAM ENGINE
+        function renderSiswaDashboardAll() {
+            renderSiswaPaketList();
+            renderSiswaPersonalNilai();
+        }
+
+        function renderSiswaPaketList() {
+            const siswa = window.dbStore.currentUser;
+            const listLatihan = document.getElementById('listLatihanPaket');
+            const listTryout = document.getElementById('listTryoutPaket');
+
+            listLatihan.innerHTML = '';
+            listTryout.innerHTML = '';
+
+            // Get packages assigned by student's teacher
+            const availablePakets = window.dbStore.paketUjian.filter(p => p.guruId === siswa?.guruId);
+
+            availablePakets.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'p-3 border rounded-lg hover:border-govNavy flex justify-between items-center bg-slate-50';
+                card.innerHTML = `
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${p.mapel}</div>
+                        <div class="text-xs text-slate-500">${p.jumlahSoal} Soal | ${p.durasi} Menit</div>
+                    </div>
+                    <button onclick="startExam('${p.id}')" class="bg-govNavy hover:bg-govDarkNavy text-white px-3 py-1.5 rounded text-xs font-bold shadow">
+                        Mulai
+                    </button>
+                `;
+
+                if (p.jenis === 'Latihan') listLatihan.appendChild(card);
+                else listTryout.appendChild(card);
+            });
+
+            if (!listLatihan.children.length) listLatihan.innerHTML = '<p class="text-xs text-slate-400">Belum ada latihan dari guru.</p>';
+            if (!listTryout.children.length) listTryout.innerHTML = '<p class="text-xs text-slate-400">Belum ada Try Out dari guru.</p>';
+        }
+
+        function renderSiswaPersonalNilai() {
+            const tbody = document.getElementById('tableSiswaNilaiBody');
+            tbody.innerHTML = '';
+            const siswa = window.dbStore.currentUser;
+
+            const myNilai = window.dbStore.rekapNilai.filter(r => r.siswaNama === siswa?.nama && r.kelas === siswa?.kelas);
+
+            myNilai.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold">${r.mapel}</td>
+                    <td class="px-4 py-3">${r.jenis}</td>
+                    <td class="px-4 py-3 font-bold text-emerald-600">${r.skor}</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${r.waktu}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Tersimpan</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // EXAM EXECUTION LOGIC
+        function startExam(paketId) {
+            const paket = window.dbStore.paketUjian.find(p => p.id === paketId);
+            const bank = window.dbStore.bankSoal.find(b => b.id === paket.bankId);
+
+            if (!paket || !bank) {
+                alert('Soal tidak ditemukan!');
+                return;
+            }
+
+            // Slice question array up to package count
+            const questions = bank.soalList.slice(0, paket.jumlahSoal);
+
+            activeExam = {
+                paket,
+                questions,
+                currentIndex: 0,
+                timeRemaining: paket.durasi * 60
+            };
+            examAnswers = {};
+
+            document.getElementById('examTitle').textContent = paket.mapel;
+            document.getElementById('examTypeBadge').textContent = paket.jenis;
+
+            showView('viewExam');
+            renderQuestion();
+            renderQuestionGrid();
+            startTimer();
+        }
+
+        function startTimer() {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+
+            examTimerInterval = setInterval(() => {
+                if (activeExam.timeRemaining <= 0) {
+                    clearInterval(examTimerInterval);
+                    alert('Waktu habis! Ujian akan dikirimkan otomatis.');
+                    finishExam();
+                } else {
+                    activeExam.timeRemaining--;
+                    const m = Math.floor(activeExam.timeRemaining / 60);
+                    const s = activeExam.timeRemaining % 60;
+                    document.getElementById('examTimerDisplay').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            const q = activeExam.questions[activeExam.currentIndex];
+            document.getElementById('currentQuestionNum').textContent = activeExam.currentIndex + 1;
+            document.getElementById('questionText').textContent = q.soal;
+
+            const optsContainer = document.getElementById('optionsContainer');
+            optsContainer.innerHTML = '';
+
+            const choices = [
+                { key: 'A', text: q.pilihanA },
+                { key: 'B', text: q.pilihanB },
+                { key: 'C', text: q.pilihanC },
+                { key: 'D', text: q.pilihanD }
+            ];
+
+            choices.forEach(ch => {
+                const isSelected = examAnswers[activeExam.currentIndex] === ch.key;
+                const div = document.createElement('div');
+                div.onclick = () => selectOption(ch.key);
+                div.className = `p-3 rounded-lg border cursor-pointer flex items-center space-x-3 transition ${isSelected ? 'border-govNavy bg-blue-50 font-semibold' : 'border-slate-200 hover:bg-slate-50'}`;
+                div.innerHTML = `
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center border text-xs ${isSelected ? 'bg-govNavy text-white' : 'border-slate-300 text-slate-600'}">${ch.key}</div>
+                    <div class="text-sm text-slate-800">${ch.text}</div>
+                `;
+                optsContainer.appendChild(div);
+            });
+        }
+
+        function selectOption(key) {
+            examAnswers[activeExam.currentIndex] = key;
+            renderQuestion();
+            renderQuestionGrid();
+        }
+
+        function renderQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            grid.innerHTML = '';
+            activeExam.questions.forEach((q, idx) => {
+                const isAnswered = examAnswers[idx] !== undefined;
+                const isCurrent = idx === activeExam.currentIndex;
+
+                const btn = document.createElement('button');
+                btn.onclick = () => { activeExam.currentIndex = idx; renderQuestion(); renderQuestionGrid(); };
+                btn.className = `h-9 rounded font-bold text-xs flex items-center justify-center transition ${isCurrent ? 'ring-2 ring-govGold' : ''} ${isAnswered ? 'bg-govNavy text-white' : 'bg-slate-100 text-slate-600'}`;
+                btn.textContent = idx + 1;
+                grid.appendChild(btn);
+            });
+        }
+
+        function prevQuestion() {
+            if (activeExam.currentIndex > 0) {
+                activeExam.currentIndex--;
+                renderQuestion();
+                renderQuestionGrid();
+            }
+        }
+
+        function nextQuestion() {
+            if (activeExam.currentIndex < activeExam.questions.length - 1) {
+                activeExam.currentIndex++;
+                renderQuestion();
+                renderQuestionGrid();
+            }
+        }
+
+        function confirmFinishExam() {
+            const totalSoal = activeExam.questions.length;
+            const dijawab = Object.keys(examAnswers).length;
+            const belumDijawab = totalSoal - dijawab;
+
+            let msg = `Apakah Anda yakin ingin menyelesaikan ujian?`;
+            if (belumDijawab > 0) {
+                msg = `⚠️ Peringatan: Masih ada ${belumDijawab} dari ${totalSoal} soal yang BELUM Anda jawab!\n\nYakin ingin tetap mengumpulkan jawaban sekarang?`;
+            }
+
+            if (confirm(msg)) {
+                finishExam();
+            }
+        }
+
+        function finishExam() {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+
+            let correctCount = 0;
+            activeExam.questions.forEach((q, idx) => {
+                if (examAnswers[idx] === q.kunci) {
+                    correctCount++;
+                }
+            });
+
+            const score = Math.round((correctCount / activeExam.questions.length) * 100);
+            const siswa = window.dbStore.currentUser;
+
+            // Save Rekap Nilai
+            const rekapObj = {
+                id: 'nilai_' + Date.now(),
+                siswaNama: siswa.nama,
+                kelas: siswa.kelas,
+                guruId: siswa.guruId,
+                guruNama: siswa.guruNama,
+                mapel: activeExam.paket.mapel,
+                jenis: activeExam.paket.jenis,
+                skor: score,
+                waktu: new Date().toLocaleString()
+            };
+
+            if (window.saveToFirestore) window.saveToFirestore('rekapNilai', rekapObj.id, rekapObj);
+
+            // Render Result Page & Discussion
+            document.getElementById('resultScore').textContent = score;
+            document.getElementById('resultMeta').textContent = `Mata Pelajaran: ${activeExam.paket.mapel} | Benar ${correctCount} dari ${activeExam.questions.length} soal`;
+
+            renderDiscussion();
+            showView('viewResult');
+        }
+
+        function renderDiscussion() {
+            const container = document.getElementById('discussionContainer');
+            container.innerHTML = '';
+
+            activeExam.questions.forEach((q, idx) => {
+                const userAns = examAnswers[idx] || 'Tidak Dijawab';
+                const isCorrect = userAns === q.kunci;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border ${isCorrect ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50'} space-y-2`;
+                card.innerHTML = `
+                    <div class="font-bold text-sm text-slate-800">Soal No. ${idx + 1}: ${q.soal}</div>
+                    <div class="text-xs space-y-1">
+                        <div>Jawaban Anda: <span class="font-bold ${isCorrect ? 'text-emerald-700' : 'text-red-700'}">${userAns}</span></div>
+                        <div>Kunci Jawaban: <span class="font-bold text-emerald-700">${q.kunci}</span></div>
+                    </div>
+                    <div class="text-xs bg-white p-3 rounded border border-slate-200 mt-2 text-slate-600">
+                        <span class="font-bold text-govNavy">Pembahasan:</span> ${q.penjelasan}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // UTILITY FUNCTIONS
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function exportToExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Rekap" });
+            XLSX.writeFile(wb, `${filename}_${Date.now()}.xlsx`);
+        }
+    </script>
+</body>
+</html>
