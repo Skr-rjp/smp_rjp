@@ -738,14 +738,14 @@
 
         // Firebase Configuration & Initialization
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-tka-cbt-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "demo-api-key",
-            authDomain: "demo-app.firebaseapp.com",
-            projectId: "demo-app",
-            storageBucket: "demo-app.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:demo"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyB3pybwqoPWJ7jzVhlmww1S_HQSoKfHl_Y",
+  authDomain: "aplikasi-tka.firebaseapp.com",
+  projectId: "aplikasi-tka",
+  storageBucket: "aplikasi-tka.firebasestorage.app",
+  messagingSenderId: "885175039705",
+  appId: "1:885175039705:web:31e7b345d9407ef495b0c8"
+};
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
